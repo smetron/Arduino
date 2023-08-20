@@ -7,9 +7,12 @@
 
 
 #define DEVICE_NAME         "FCS_Meter_2408"
-#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b" //LED Control Service
+#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
+unsigned long previousMillis = 0;
+int counter = 0;
+bool autoRestart = true; // set this to false to stop the counter from restarting the ESP32
 
 class MyCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
@@ -21,6 +24,8 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         for (int i = 0; i < value.length(); i++){
           Serial.print(value[i]);
 
+          counter = 0;
+          
           if(value[i] == '1'){
             pinMode(2, OUTPUT);
             digitalWrite(2, HIGH);
@@ -62,14 +67,37 @@ void setup() {
   pAdvertising->start();
 }
 
-void loop() {
 
-  int cnt = 123456789;
+
+int cnt = 123456789;
+
+void RestartCounter(){
+  if (millis() - previousMillis >= 1000) {
+    counter++;
+    previousMillis = millis();
+  }
+
+  if(counter >= 15){
+    if(autoRestart){
+      digitalWrite(2, LOW);
+      
+      ESP.restart();  
+    }
+  }
+
+  Serial.println(counter);
+}
+
+void loop() {
+  RestartCounter();
+
+  
+  cnt = cnt + 1;
 
   char buffer[40];
   sprintf(buffer, "%d", cnt);
         
   pCharacteristic->setValue(buffer);
 
-  delay(2000);
+  delay(1000);
 }
