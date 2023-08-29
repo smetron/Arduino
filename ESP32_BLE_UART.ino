@@ -12,9 +12,14 @@
 
 unsigned long previousMillis = 0;
 int counter = 0;
-bool autoRestart = true; // set this to false to stop the counter from restarting the ESP32
+bool autoRestart = true;
 
 class MyCallbacks: public BLECharacteristicCallbacks {
+    void onRead(BLECharacteristic *pCharacteristic) {
+      counter = 0; 
+      //pCharacteristic->setValue("data");
+    }
+    
     void onWrite(BLECharacteristic *pCharacteristic) {
       std::string value = pCharacteristic->getValue();
 
@@ -60,7 +65,7 @@ void setup() {
 
   pCharacteristic->setCallbacks(new MyCallbacks());
 
-  pCharacteristic->setValue("Sample Data");
+  pCharacteristic->setValue("0");
   pService->start();
 
   BLEAdvertising *pAdvertising = pServer->getAdvertising();
@@ -69,7 +74,7 @@ void setup() {
 
 
 
-int cnt = 123456789;
+
 
 void RestartCounter(){
   if (millis() - previousMillis >= 1000) {
@@ -88,14 +93,23 @@ void RestartCounter(){
   Serial.println(counter);
 }
 
+
+String result = "";
+
 void loop() {
   RestartCounter();
 
+  String message = Serial.readStringUntil('\n');
   
-  cnt = cnt + 1;
+  if (message.length() >= 1) {
+    result = message;
+    result.trim(); 
+  }
 
+  Serial.println(result);
+  
   char buffer[40];
-  sprintf(buffer, "%d", cnt);
+  sprintf(buffer, "%s", result);
         
   pCharacteristic->setValue(buffer);
 
