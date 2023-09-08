@@ -90,7 +90,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
         counter = 0;
 
         char buffer[40];
-        sprintf(buffer, "%llu", (variable.total_accumulator + variable.counter));
+        sprintf(buffer, "%llu,%s", (variable.total_accumulator + variable.counter), label);
 
         pCharacteristic->setValue(buffer);
     }
@@ -120,18 +120,18 @@ class MyCallbacks : public BLECharacteristicCallbacks {
                     pinMode(2, OUTPUT);
                     digitalWrite(2, HIGH);
                 }
-                else {
-                    pinMode(2, OUTPUT);
-                    digitalWrite(2, LOW);
-                }
 
                 if(value[i] == '2')
                 {
-                  ResetCounter();
+                    ResetCounter();
                 }
             }
 
             label = str;
+            if(str.length() >= 3){
+              preferences.putString("label", str);
+            }
+            
 
             Serial.println();
             Serial.println("*********");
@@ -168,6 +168,8 @@ long previousMillis = 0;
 
 void ResetCounter()
 {
+    digitalWrite(2, LOW);
+
     variable.total_accumulator = 1;
     variable.counter = 0;
 
@@ -177,8 +179,9 @@ void ResetCounter()
     delay(100);
 
     StoreStruct(&variable, sizeof(variable));
+    preferences.putString("label", "");
 
-    delay(100);
+    delay(300);
 
     ESP.restart();
 }
@@ -216,8 +219,6 @@ void loop() {
     //Save the Values in Memory
     if ((currentMillis - previousMillis >= 10000)) {
 
-        
-        preferences.putString("label", label);
         counter++;
 
         //if ((currentMillis - previousMillis >= 5000)) {
