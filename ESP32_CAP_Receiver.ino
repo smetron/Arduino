@@ -1,6 +1,6 @@
 /*
-  ESP32-based BLE Receiver for Cap
-  Send Cap Mac Address over serial terminal with newline like d7:07:f9:5f:60:e3\n
+  ESP32 based BLE Receiver for Cap
+  Send Cap Mac Address over serial terminal wiht newline like d7:07:f9:5f:60:e3\n
   Pin 1 => HIGH and LOW for open and close
   Pin 2 => Tempring while the Cap is closed
   Pin 3 => For Detecting Ibeacons nearby starting with device name FCS
@@ -13,7 +13,7 @@
 
 #include "SPIFFS.h"
 
-int scanTime = 3; //In seconds
+int scanTime = 2; //In seconds
 BLEScan* pBLEScan;
 
 String CapAddress = "d8:07:f9:5f:60:e3";
@@ -144,7 +144,14 @@ void setup()
 }
 
 
+int reset_counter = 0;
+
 void loop() {
+  reset_counter++;
+  if(reset_counter >= 60) {
+    ESP.restart();
+  }
+
   BLEScanResults foundDevices = pBLEScan->start(scanTime, false);
   pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
 
